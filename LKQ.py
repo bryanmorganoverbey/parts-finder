@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 
 def make_soup(url: str) -> BeautifulSoup:
     r = requests.get(url, headers={
-                     "Referer": "https://www.lkqpickyourpart.com/inventory/nashville-1218/"})
+                    "Referer": "https://www.lkqpickyourpart.com/inventory/nashville-1218/"})
     if r.status_code != 200:
         print('Failed to get LKQ data: ', r.status_code)
         sys.exit(1)
@@ -19,38 +19,27 @@ def parse(soup: BeautifulSoup) -> list[list[str]]:
     result = []
     items = soup.select(".pypvi_resultRow")
     for item in items:
-        title = item.select_one(".pypvi_ymm").getText()
+        title = item.select_one(".pypvi_ymm").getText().replace('\n', '').replace('\r', '').strip()
+        # Find the element containing the text "Available:"
+        date = item.find("time").getText().replace('\n', '').replace('\r', '').strip()
+        # Navigate to the next sibling element to get the date
         # price = item.select_one(".s-item__price").getText(strip=True)
         # link = item.select_one(".s-item__link")['href']
-        result.append(title)
+        result.append(pd.DataFrame([[title, date]], columns=["title", "available_date"]))
     return result
-
-
 class Nashville:
-    """
-    Documentation for MyClass.
-    """
-
     def __init__(self):
         # Constructor code goes here
         pass
 
-    def create_lkq_nashville_csv(self):
-        """
-        Documentation for my_method.
-        """
-        # delete old file
+    def create_lkq_nashville_df(self) -> pd.DataFrame:
+        cars_df = pd.DataFrame(columns=["title", "release_date"])
         try:
-          os.remove("LKQ_car_list.csv")
-        except:
-            pass
-        f = open("LKQ_car_list.csv", "a")
-        # Method code goes here
-        for i in range(1):
-          url = f"https://www.lkqpickyourpart.com/DesktopModules/pyp_vehicleInventory/getVehicleInventory.aspx?page={i+1}&filter=&store=1218&pageSize=15"
-          titleArray = parse(make_soup(url))
-          for t in titleArray:
-            t = t.lstrip()  # This will strip leading spaces and tabs
-            t = t.rstrip()
-            f.write(t + "\n")
-  # Additional functions, classes, or variables can be defined here
+          for i in range(5):
+            url = f"https://www.lkqpickyourpart.com/DesktopModules/pyp_vehicleInventory/getVehicleInventory.aspx?page={i+1}&filter=&store=1218&pageSize=15"
+            parsedArray = parse(make_soup(url))
+            print(parsedArray)
+            cars_df = pd.concat(parsedArray , ignore_index=True)
+          return cars_df
+        except Exception as e:
+          print("Error in creating LKQ list: ", e)
