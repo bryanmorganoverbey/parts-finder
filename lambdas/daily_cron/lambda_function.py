@@ -14,7 +14,7 @@ def main() -> None:
     try:
       for i in range(len(cars_df)):
         car_info = cars_df.iloc[i]
-        for part in ["Body control module", "chasis control module", "Engine control module", "Transmission control module", "amplifier"]:
+        for part in ["ABS pump", "Body control module", "TCU", "ECU", "amplifier", "Headlight Ballast"]:
           item = (car_info["title"] + " " + part)
           print(item)
           url = f"https://www.ebay.com/sch/i.html?_from=R40&_trksid=p2334524.m570.l1313&_nkw={item}&_sacat=0&_osacat=0&_sop=16&LH_Complete=1&LH_Sold=1"
@@ -25,7 +25,7 @@ def main() -> None:
       # Concatenate all DataFrames in the list into one DataFrame
       combined_df = pd.concat(parts_and_averages, ignore_index=True)
       # Return only the top 10 earning products and their ebay URLs
-      combined_df = combined_df.nlargest(10, 'average_price')
+      combined_df = combined_df.nlargest(20, 'average_price')
       combined_df.to_csv("output.csv", sep="\t", index=False)
       print("Done!")
     except Exception as e:
@@ -65,8 +65,8 @@ def get_average_part_price(query: str, available_date: str, df: pd.DataFrame, ur
     try:
       df['price'] = df['price'].replace('[^0-9.]', '', regex=True).astype(float)
       # Compute the average price
-      average_price = df['price'].mean()
-      print("Average price:", average_price)
+      average_price = df['price'].median()
+      print("Median:", average_price)
     except:
       average_price = 0.0
     finally:
