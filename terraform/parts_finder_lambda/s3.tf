@@ -13,6 +13,7 @@ resource "aws_s3_bucket_versioning" "lambda_bucket" {
 # Create a bucket policy
 resource "aws_s3_bucket_policy" "my_bucket_policy" {
   bucket = aws_s3_bucket.lambda_bucket.id
+  depends_on = [ aws_s3_bucket_public_access_block.lambda_zip_files ]
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -21,13 +22,20 @@ resource "aws_s3_bucket_policy" "my_bucket_policy" {
         Effect    = "Allow",
         Principal = "*",
         Action    = [
-          "s3:GetObject",
-          "s3:PutObject"
+          "s3:*Object"
         ],
         Resource  = "${aws_s3_bucket.lambda_bucket.arn}/*"
       }
     ]
   })
+}
+
+resource "aws_s3_bucket_public_access_block" "lambda_zip_files" {
+  bucket = aws_s3_bucket.lambda_bucket.id
+  block_public_acls       = true
+  block_public_policy     = false
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 
