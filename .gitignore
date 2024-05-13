@@ -4,3 +4,4 @@ parts_finder/
 __pycache__*
 output.csv
 *.zip
+*.env

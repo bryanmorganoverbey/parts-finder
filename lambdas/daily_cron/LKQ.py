@@ -35,7 +35,7 @@ class Nashville:
     def create_lkq_nashville_df(self) -> pd.DataFrame:
         cars_df = pd.DataFrame(columns=["title", "release_date"])
         try:
-          for i in range(5):
+          for i in range(1):
             url = f"https://www.lkqpickyourpart.com/DesktopModules/pyp_vehicleInventory/getVehicleInventory.aspx?page={i+1}&filter=&store=1218&pageSize=15"
             parsedArray = parse(make_soup(url))
             print(parsedArray)
