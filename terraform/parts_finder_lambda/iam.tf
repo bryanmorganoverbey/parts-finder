@@ -44,3 +44,23 @@ resource "aws_lambda_permission" "s3_invoke_permission" {
   principal     = "s3.amazonaws.com"
   source_arn    = "${aws_s3_bucket.lambda_bucket.arn}/*"
 }
+# allow the lambda to publish SNS messages
+resource "aws_iam_policy" "sns_publish_policy" {
+  name        = "sns-publish-policy"
+  description = "IAM policy allowing SNS publish"
+  policy      = jsonencode({
+    Version   = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = "sns:Publish",
+        Resource = "arn:aws:sns:us-east-2:678837614953:Parts-finder"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "sns_publish_policy_attachment" {
+  role       = "lambda-exec-role"  # Replace with the name of your Lambda execution role
+  policy_arn = aws_iam_policy.sns_publish_policy.arn
+}

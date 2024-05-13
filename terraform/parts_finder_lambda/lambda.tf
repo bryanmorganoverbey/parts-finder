@@ -7,6 +7,7 @@ resource "aws_lambda_function" "my_lambda_function" {
   function_name    = "daily_parts_finder"
   handler          = "lambda_function.main"
   runtime          = "python3.11" # Change to your desired runtime
+  layers           = ["arn:aws:lambda:us-east-2:336392948345:layer:AWSSDKPandas-Python311:12"]
   role             = aws_iam_role.lambda_exec_role.arn
   s3_bucket        = var.s3_bucket_name
   s3_key           = var.lambda_zip_key
@@ -20,6 +21,7 @@ resource "aws_lambda_function" "my_lambda_function" {
     }
   }
 }
+
 
 
 
