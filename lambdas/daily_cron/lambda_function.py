@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 import LKQ
 
 
-def main() -> None:
+def main(event, lambda_context) -> None:
     lkq = LKQ.Nashville()
     cars_df = lkq.create_lkq_nashville_df()
     # Create an empty list to store DataFrames
@@ -14,7 +14,7 @@ def main() -> None:
     try:
       for i in range(len(cars_df)):
         car_info = cars_df.iloc[i]
-        for part in ["ABS pump", "Body control module", "TCU", "ECU", "amplifier", "Headlight Ballast"]:
+        for part in ["ABS pump", "Body control module", "TCU", "ECU", "amplifier", "Headlight"]:
           item = (car_info["title"] + " " + part)
           print(item)
           url = f"https://www.ebay.com/sch/i.html?_from=R40&_trksid=p2334524.m570.l1313&_nkw={item}&_sacat=0&_osacat=0&_sop=16&LH_Complete=1&LH_Sold=1"
