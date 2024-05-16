@@ -2,7 +2,7 @@
 resource "aws_cloudwatch_event_rule" "lambda_schedule" {
   name                = "lambda-schedule"
   description           = "Schedule lambda function"
-  schedule_expression = "rate(4 hours)" # Change the schedule as needed
+  schedule_expression = "rate(12 hours)" # Change the schedule as needed
 }
 
 resource "aws_cloudwatch_event_target" "lambda_target" {
