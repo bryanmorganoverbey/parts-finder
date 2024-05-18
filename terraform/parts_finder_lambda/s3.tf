@@ -37,12 +37,25 @@ resource "aws_s3_bucket_public_access_block" "lambda_zip_files" {
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
+locals {
+  lambda-files = [ # explicit list of files to archive
+    "lambda_function.py",
+    "sns_email_alerts.py",
+    "LKQ.py"
+  ]
+}
 
-
+# Zip the Lamda function on the fly
+data "archive_file" "source" {
+  type        = "zip"
+  source_dir  = var.path_to_lambda_sourcecode
+  excludes    = [for file in fileset(var.path_to_lambda_sourcecode, "**") : file if !contains(local.lambda-files, file)]
+  output_path = var.path_to_zip
+}
 resource "aws_s3_object" "provison_source_files" {
   bucket      = aws_s3_bucket.lambda_bucket.id
   key         = var.lambda_zip_key
   source      = var.path_to_zip
-  source_hash = filemd5(var.path_to_zip)
+  source_hash = filemd5(data.archive_file.source.output_path)
 }
 

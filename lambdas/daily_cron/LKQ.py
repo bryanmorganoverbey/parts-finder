@@ -19,7 +19,7 @@ def parse(soup: BeautifulSoup) -> list[list[str]]:
     result = []
     items = soup.select(".pypvi_resultRow")
     for item in items:
-        title = item.select_one(".pypvi_ymm").getText().replace('\n', '').replace('\r', '').strip()
+        title = item.select_one(".pypvi_ymm").getText().replace('\n', '').replace('\r', '').strip().replace("&", "and")
         # Find the element containing the text "Available:"
         date = item.find("time").getText().replace('\n', '').replace('\r', '').strip()
         # Navigate to the next sibling element to get the date

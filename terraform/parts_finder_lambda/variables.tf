@@ -8,9 +8,14 @@ variable "s3_bucket_name" {
 variable "lambda_zip_key" {
   description = "Key of the ZIP file containing Lambda function code in the S3 bucket"
   type        = string
-  default = "key-to-file"
+  default = "daily_cron.zip"
 }
 
+variable "path_to_lambda_sourcecode" {
+  description = "Path the the lambda function code"
+  type = string
+  default = "../../lambdas/daily_cron"
+}
 variable "path_to_zip" {
   description = "Path the the daily_cron.zip lambda function code"
   type = string
