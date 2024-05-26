@@ -45,21 +45,37 @@ def make_soup(url: str) -> BeautifulSoup:
 
 def parse(soup: BeautifulSoup) -> list[list[str]]:
     result = []
-    # if text, "No exact matches found" appears, just skip the whole item
+
+    # Check if the warning "No exact matches found" appears and skip if it does
     null_warning = soup.select_one(".srp-save-null-search")
     if null_warning is None:
-      items = soup.select(".s-item")
-      for item in items:
-          try:
-            title = item.select_one(".s-item__title").getText(strip=True)
-            price = item.select_one(".s-item__price").getText(strip=True)
-            link = item.select_one(".s-item__link")['href']
-            result.append([title, price, link])
-          except:
-            title = "invalid!"
-            price = 0
-            link = "no link!"
-            result.append([title, price, link])
+        # Find the span tag containing the text "Results matching fewer words"
+        stop_span = soup.find('span', text="Results matching fewer words")
+
+        # Get all items before this span tag
+        if stop_span:
+            # Get all preceding siblings that are elements
+            items = []
+            for sibling in stop_span.previous_elements:
+                if sibling.name == "div" and "s-item" in sibling.get("class", []):
+                    items.append(sibling)
+                if sibling.name == "html":
+                    break
+            items.reverse()  # Reverse to maintain the original order
+        else:
+            items = soup.select(".s-item")
+
+        for item in items:
+            try:
+                title = item.select_one(".s-item__title").getText(strip=True)
+                price = item.select_one(".s-item__price").getText(strip=True)
+                link = item.select_one(".s-item__link")['href']
+                result.append([title, price, link])
+            except:
+                title = "invalid!"
+                price = 0
+                link = "no link!"
+                result.append([title, price, link])
 
     return result
 
