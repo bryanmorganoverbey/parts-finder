@@ -1,5 +1,4 @@
 import sys
-import time
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -7,36 +6,42 @@ import LKQ
 from sns_email_alerts import publish_to_sns
 
 
-def main(event = None, lambda_context = None) -> None:
+def main(event=None, lambda_context=None) -> None:
     lkq = LKQ.Nashville()
-    cars_df = lkq.create_lkq_nashville_df()
+    lkq_cars_df = lkq.create_lkq_nashville_df()
     # Create an empty list to store DataFrames
     parts_and_averages = []
     try:
-      for i in range(len(cars_df)):
-        car_info = cars_df.iloc[i]
-        for part in ["ABS+pump", "Body+control+module", "TCU", "ECU", "amplifier", "Headlight"]:
-          item = ('+'.join(car_info["title"].split()) + "+" + part)
-          print(item)
-          url = f"https://www.ebay.com/sch/i.html?_from=R40&_trksid=p2334524.m570.l1313&_nkw={item}&_sacat=0&_osacat=0&_sop=16&LH_Complete=1&LH_Sold=1&LH_ItemCondition=3000"
-          df = pd.DataFrame(parse(make_soup(url)), columns=[
-                            'title', 'price', 'link'])
-          # get_average_part_price returns a dataframe with part query and average price
-          parts_and_averages.append(get_median_part_price(item, car_info["available_date"], df, url))
-      # Concatenate all DataFrames in the list into one DataFrame
-      combined_df = pd.concat(parts_and_averages, ignore_index=True)
-      # Return only the top 10 earning products and their ebay URLs
-      combined_df = combined_df.nlargest(20, 'median_price')
-      publish_to_sns(combined_df)
-      print("Done!")
-    except Exception as e:
-      # Code to handle any exception
-      print("An exception occurred:", e)
+        for i in range(len(lkq_cars_df)):
+            lkq_car_info = lkq_cars_df.iloc[i]
+            for part in ["ABS+pump", "Body+control+module", "TCU", "ECU", "amplifier", "Headlight"]:
+                item = ('+'.join(lkq_car_info["title"].split()) + "+" + part)
+                print(item)
+                url = f"https://www.ebay.com/sch/i.html?_from=R40&_trksid=p2334524.m570.l1313&_nkw={item}&_sacat=0&_osacat=0&_sop=16&LH_Complete=1&LH_Sold=1&LH_ItemCondition=3000"
+                parsed_ebay_items_list = parse(make_soup(url))
+                if len(parsed_ebay_items_list) == 0:
+                    print("No items found on eBay!")
+                    continue
+                ebay_df = pd.DataFrame(parsed_ebay_items_list, columns=[
+                    'title', 'price', 'link'])
 
+                # get_average_part_price returns a dataframe with part query and average price
+                parts_and_averages.append(get_median_part_price(
+                    item, lkq_car_info["available_date"], ebay_df, url, lkq_car_info["photo_path"]))
+        # Concatenate all DataFrames in the list into one DataFrame
+        combined_df = pd.concat(parts_and_averages, ignore_index=True)
+        # Return only the top 10 earning products and their ebay URLs
+        combined_df = combined_df.nlargest(20, 'median_price')
+        publish_to_sns(combined_df)
+        print("Done!")
+    except Exception as e:
+        # Code to handle any exception
+        print("An exception occurred:", e)
 
 
 def make_soup(url: str) -> BeautifulSoup:
-    r = requests.get(url)
+    '''Make a BeautifulSoup object from the LKQ Nashville inventory page.'''
+    r = requests.get(url, timeout=5)
     if r.status_code != 200:
         print('Failed to get data: ', r.status_code)
         sys.exit(1)
@@ -44,58 +49,70 @@ def make_soup(url: str) -> BeautifulSoup:
 
 
 def parse(soup: BeautifulSoup) -> list[list[str]]:
+    '''Parse the LKQ Nashville inventory and return a list of DataFrames. Each DataFrame contains the info of one car.'''
     result = []
-
+    items = []
     # Check if the warning "No exact matches found" appears and skip if it does
     null_warning = soup.select_one(".srp-save-null-search")
+    print("No exact matches found!") if null_warning else print("Found matches!")
     if null_warning is None:
         # Find the span tag containing the text "Results matching fewer words"
-        stop_span = soup.find('span', text="Results matching fewer words")
-
+        stop_span = soup.find('span', string="Results matching fewer words")
         # Get all items before this span tag
+
         if stop_span:
+            print("Stop span found!")
             # Get all preceding siblings that are elements
-            items = []
-            for sibling in stop_span.previous_elements:
-                if sibling.name == "div" and "s-item" in sibling.get("class", []):
-                    items.append(sibling)
-                if sibling.name == "html":
-                    break
+            previous_elements = stop_span.find_all_previous(
+                "li", class_="s-item")
+            print("Number of previous siblings: ", len(previous_elements))
+            for sibling in previous_elements:
+                items.append(sibling)
             items.reverse()  # Reverse to maintain the original order
         else:
-            items = soup.select(".s-item")
-
+            print("Stop span not found!")
+            items = soup.find_all("li", class_="s-item")
+        print("Number of items found: ", len(items))
         for item in items:
             try:
                 title = item.select_one(".s-item__title").getText(strip=True)
                 price = item.select_one(".s-item__price").getText(strip=True)
+                print("Item price: ", price)
                 link = item.select_one(".s-item__link")['href']
                 result.append([title, price, link])
-            except:
+            except Exception:
+                print("An exception occurred:", Exception)
                 title = "invalid!"
                 price = 0
                 link = "no link!"
                 result.append([title, price, link])
-
     return result
 
-def get_median_part_price(query: str, available_date: str, df: pd.DataFrame, url: str) -> pd.DataFrame:
-    # Clean the 'price' column by removing dollar signs and converting to numeric type
-# Function to strip leading $ and extract only the leading number
-    try:
-      df['price'] = df['price'].replace('[^0-9.]', '', regex=True).astype(float)
-      # Compute the average price
-      average_price = df['price'].mean()
-      median_price = df['price'].median()
-      print("Average:", average_price)
-    except:
-      average_price = 0.0
-      median_price = 0.0
-    finally:
-      data = [[query, available_date, average_price, median_price,  url]]
-      dataframe = pd.DataFrame(data, columns=['title', 'available_date', 'average_price', 'median_price', 'url'] )
-      print(dataframe)
 
+def get_median_part_price(query: str, available_date: str, df: pd.DataFrame, url: str, photo_path: str) -> pd.DataFrame:
+    '''Compute the median price of a part from the eBay search results. Return a DataFrame with the part query, available date, median price, and eBay URL.'''
+    # Clean the 'price' column by removing dollar signs and converting to numeric type
+    # Function to strip leading $ and extract only the leading number
+    median_price = 0.0
+    average_price = 0.0
+    try:
+        # clean the price column by removing dollar signs and converting to numeric type
+        df['price'] = df['price'].replace(
+            '[^0-9.]', '', regex=True).astype(float)
+
+        # Compute the average price
+        average_price = df['price'].mean()
+        median_price = df['price'].median()
+        print("Average price after cleaning data:", average_price)
+    except:
+        average_price = 0.0
+        median_price = 0.0
+    finally:
+        data = [[query, available_date, average_price,
+                 median_price,  url, photo_path]]
+        dataframe = pd.DataFrame(data, columns=[
+            'title', 'available_date', 'average_price', 'median_price', 'url', "photo_path"])
+        print(dataframe)
     return dataframe
 
 
