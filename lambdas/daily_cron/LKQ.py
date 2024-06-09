@@ -17,19 +17,27 @@ def make_soup(url: str) -> BeautifulSoup:
     return BeautifulSoup(r.text, 'html.parser')
 
 
-def parse(soup: BeautifulSoup) -> list[list[str]]:
+def parse(soup: BeautifulSoup) -> list[pd.DataFrame]:
     '''Parse the LKQ Nashville inventory and return a list of DataFrames. Each DataFrame contains the info of one car.'''
-    result = []
+    result = pd.DataFrame(columns=["title", "available_date", "photo_path"])
     items = soup.select(".pypvi_resultRow")
     for item in items:
         title = item.select_one(".pypvi_ymm").getText().replace(
             '\n', '').replace('\r', '').strip().replace("&", "and")
         date = item.find("time").getText().replace(
             '\n', '').replace('\r', '').strip()
+        # get text from second div with class name "pypvi_detailItem"
+        detail_items = item.select(".pypvi_detailItem")
+        # get the value of the second div
+        vin = detail_items[1].getText().replace(
+            '\n', '').replace('\r', '').strip()
+        loc_in_yard = detail_items[2].getText().replace(
+            '\n', '').replace('\r', '').strip()
+        # location_in_yard=
         if len(item.select_one(".pypvi_image")) > 0:
             photo_path = item.select_one(".pypvi_image")['href']
-        result.append(pd.DataFrame([[title, date, photo_path]], columns=[
-                      "title", "available_date", "photo_path"]))
+        result = pd.concat([result, pd.DataFrame([[title, date, photo_path, vin, loc_in_yard]], columns=[
+            "title", "available_date", "photo_path", "vin", "location_in_yard"])])
     return result
 
 
@@ -48,7 +56,9 @@ class Nashville:
                 url = f"https://www.lkqpickyourpart.com/DesktopModules/pyp_vehicleInventory/getVehicleInventory.aspx?page={i+1}&filter=&store=1218&pageSize=15"
                 parsed_array = parse(make_soup(url))
                 print(parsed_array)
-                cars_df = pd.concat(parsed_array, ignore_index=True)
+                # add the parsed array to the DataFrame
+                cars_df = pd.concat([cars_df, parsed_array])
+
             return cars_df
         except requests.exceptions.RequestException as e:
             print("Error in creating LKQ list: ", e)

@@ -14,7 +14,7 @@ def main(event=None, lambda_context=None) -> None:
     try:
         for i in range(len(lkq_cars_df)):
             lkq_car_info = lkq_cars_df.iloc[i]
-            for part in ["ABS+pump", "Body+control+module", "TCU", "ECU", "amplifier", "Headlight"]:
+            for part in ["Body+control+module",  "amplifier",  "ECU", "Headlight+Ballast"]:
                 item = ('+'.join(lkq_car_info["title"].split()) + "+" + part)
                 print(item)
                 url = f"https://www.ebay.com/sch/i.html?_from=R40&_trksid=p2334524.m570.l1313&_nkw={item}&_sacat=0&_osacat=0&_sop=16&LH_Complete=1&LH_Sold=1&LH_ItemCondition=3000"
@@ -27,7 +27,7 @@ def main(event=None, lambda_context=None) -> None:
 
                 # get_average_part_price returns a dataframe with part query and average price
                 parts_and_averages.append(get_median_part_price(
-                    item, lkq_car_info["available_date"], ebay_df, url, lkq_car_info["photo_path"]))
+                    item, lkq_car_info["available_date"], ebay_df, url, lkq_car_info["photo_path"], lkq_car_info["vin"], lkq_car_info["location_in_yard"]))
         # Concatenate all DataFrames in the list into one DataFrame
         combined_df = pd.concat(parts_and_averages, ignore_index=True)
         # Return only the top 10 earning products and their ebay URLs
@@ -89,7 +89,7 @@ def parse(soup: BeautifulSoup) -> list[list[str]]:
     return result
 
 
-def get_median_part_price(query: str, available_date: str, df: pd.DataFrame, url: str, photo_path: str) -> pd.DataFrame:
+def get_median_part_price(query: str, available_date: str, df: pd.DataFrame, url: str, photo_path: str, vin: str, location_in_yard: str) -> pd.DataFrame:
     '''Compute the median price of a part from the eBay search results. Return a DataFrame with the part query, available date, median price, and eBay URL.'''
     # Clean the 'price' column by removing dollar signs and converting to numeric type
     # Function to strip leading $ and extract only the leading number
@@ -109,9 +109,9 @@ def get_median_part_price(query: str, available_date: str, df: pd.DataFrame, url
         median_price = 0.0
     finally:
         data = [[query, available_date, average_price,
-                 median_price,  url, photo_path]]
+                 median_price,  url, photo_path, vin, location_in_yard]]
         dataframe = pd.DataFrame(data, columns=[
-            'title', 'available_date', 'average_price', 'median_price', 'url', "photo_path"])
+            'title', 'available_date', 'average_price', 'median_price', 'url', "photo_path", "vin", "location_in_yard"])
         print(dataframe)
     return dataframe
 

@@ -25,6 +25,8 @@ def formatted_list(combined_df: pd.DataFrame):
         median_price = combined_df.at[i, "median_price"]
         url = combined_df.at[i, "url"]
         photo_path = combined_df.at[i, "photo_path"]
+        vin = combined_df.at[i, "vin"]
+        location_in_yard = combined_df.at[i, "location_in_yard"]
         formatted_message += f"""
     -----------------------------------
     Item            : {item_name}
@@ -33,6 +35,8 @@ def formatted_list(combined_df: pd.DataFrame):
     Median Price    : {median_price}
     URL             : {url}
     LKQ Photo       : {photo_path}
+    VIN             : {vin}
+    Location in Yard: {location_in_yard}
     \n
     """
     print(formatted_message)
