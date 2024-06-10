@@ -2,7 +2,7 @@ import sys
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from LKQ import Nashville as LKQ
+import LKQ
 from Pick_A_Part import PickAPart
 from sns_email_alerts import publish_to_sns
 
