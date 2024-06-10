@@ -3,14 +3,14 @@ import boto3
 import pandas as pd
 
 
-def publish_to_sns(dataframe):
+def publish_to_sns(dataframe, location):
     '''Publishes the list of items to the SNS topic'''
     topic_arn = "arn:aws:sns:us-east-2:678837614953:Parts-finder"
     sns = boto3.client("sns")
     sns.publish(
         TopicArn=topic_arn,
         Message=formatted_list(dataframe),
-        Subject="Your daily parts alert!",
+        Subject=f"Your daily parts alert! {location}",
 
     )
 
