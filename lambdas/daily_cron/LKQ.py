@@ -34,6 +34,7 @@ def parse(soup: BeautifulSoup) -> list[pd.DataFrame]:
         loc_in_yard = detail_items[2].getText().replace(
             '\n', '').replace('\r', '').strip()
         # location_in_yard=
+        photo_path = None
         if len(item.select_one(".pypvi_image")) > 0:
             photo_path = item.select_one(".pypvi_image")['href']
         result = pd.concat([result, pd.DataFrame([[title, date, photo_path, vin, loc_in_yard]], columns=[

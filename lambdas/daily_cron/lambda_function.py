@@ -3,16 +3,16 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import LKQ
-from Pick_A_Part import PickAPart
+# from Pick_A_Part import PickAPart
 from sns_email_alerts import publish_to_sns
 
 
 def main(event=None, lambda_context=None) -> None:
     try:
         LKQ_Nashville()
-        Pick_A_Part_Nashville()
+        # Pick_A_Part_Nashville()
         print("Done!")
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         # Code to handle any exception
         print("An exception occurred:", e)
 
@@ -90,7 +90,10 @@ def parse(soup: BeautifulSoup) -> list[list[str]]:
     items = []
     # Check if the warning "No exact matches found" appears and skip if it does
     null_warning = soup.select_one(".srp-save-null-search")
-    print("No exact matches found!") if null_warning else print("Found matches!")
+    if null_warning:
+        print("No exact matches found!")
+    else:
+        print("Found matches!")
     if null_warning is None:
         # Find the span tag containing the text "Results matching fewer words"
         stop_span = soup.find('span', string="Results matching fewer words")
@@ -116,8 +119,8 @@ def parse(soup: BeautifulSoup) -> list[list[str]]:
                 print("Item price: ", price)
                 link = item.select_one(".s-item__link")['href']
                 result.append([title, price, link])
-            except Exception:
-                print("An exception occurred:", Exception)
+            except (ValueError, TypeError) as e:
+                print("An exception occurred:", e)
                 title = "invalid!"
                 price = 0
                 link = "no link!"
@@ -140,12 +143,13 @@ def get_median_part_price(query: str, available_date: str, df: pd.DataFrame, url
         average_price = df['price'].mean()
         median_price = df['price'].median()
         print("Average price after cleaning data:", average_price)
-    except:
+    except (ValueError, TypeError) as e:
+        print("An error occurred:", e)
         average_price = 0.0
         median_price = 0.0
     finally:
         data = [[query, available_date, average_price,
-                 median_price,  url, photo_path, vin, location_in_yard]]
+                median_price,  url, photo_path, vin, location_in_yard]]
         dataframe = pd.DataFrame(data, columns=[
             'title', 'available_date', 'average_price', 'median_price', 'url', "photo_path", "vin", "location_in_yard"])
         print(dataframe)

@@ -10,11 +10,12 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-2"
+  region  = "us-east-2"
+  profile = "bryanmorganoverbey"
 }
 
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "parts-finder-remote-state"
+  bucket = "parts-finder-remote-state-bryan"
   # Prevent accidental deletion of this S3 bucket
   lifecycle {
     prevent_destroy = true
@@ -50,7 +51,7 @@ resource "aws_s3_bucket_public_access_block" "public_access" {
 }
 
 resource "aws_dynamodb_table" "terraform_locks" {
-  name         = "parts-finder-remote-state-locks"
+  name         = "parts-finder-remote-state-locks-bryan"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
   attribute {

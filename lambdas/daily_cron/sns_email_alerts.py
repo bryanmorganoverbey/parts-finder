@@ -6,12 +6,11 @@ import pandas as pd
 def publish_to_sns(dataframe, location):
     '''Publishes the list of items to the SNS topic'''
     topic_arn = "arn:aws:sns:us-east-2:678837614953:Parts-finder"
-    sns = boto3.client("sns")
+    sns = boto3.client("sns", region_name="us-east-2")
     sns.publish(
         TopicArn=topic_arn,
         Message=formatted_list(dataframe),
         Subject=f"Your daily parts alert! {location}",
-
     )
 
 
