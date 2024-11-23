@@ -1,5 +1,6 @@
 provider "aws" {
-  region = "us-east-2"
+  region  = "us-east-2"
+  profile = "bryanmorganoverbey"
 }
 
 # Create a Lambda function
@@ -12,8 +13,8 @@ resource "aws_lambda_function" "my_lambda_function" {
   s3_bucket        = var.s3_bucket_name
   s3_key           = aws_s3_object.provison_source_files.key
   source_code_hash = filemd5(data.archive_file.source.output_path)
-  timeout = 180
-  memory_size = 1024
+  timeout          = 180
+  memory_size      = 1024
 
   environment {
     variables = {

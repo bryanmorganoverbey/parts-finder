@@ -1,5 +1,3 @@
-
-
 # Create an S3 bucket
 resource "aws_s3_bucket" "lambda_bucket" {
   bucket = var.s3_bucket_name # Replace with your desired bucket name
@@ -12,8 +10,8 @@ resource "aws_s3_bucket_versioning" "lambda_bucket" {
 }
 # Create a bucket policy
 resource "aws_s3_bucket_policy" "my_bucket_policy" {
-  bucket = aws_s3_bucket.lambda_bucket.id
-  depends_on = [ aws_s3_bucket_public_access_block.lambda_zip_files ]
+  bucket     = aws_s3_bucket.lambda_bucket.id
+  depends_on = [aws_s3_bucket_public_access_block.lambda_zip_files]
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -21,17 +19,17 @@ resource "aws_s3_bucket_policy" "my_bucket_policy" {
         Sid       = "PublicReadGetObject",
         Effect    = "Allow",
         Principal = "*",
-        Action    = [
+        Action = [
           "s3:*Object"
         ],
-        Resource  = "${aws_s3_bucket.lambda_bucket.arn}/*"
+        Resource = "${aws_s3_bucket.lambda_bucket.arn}/*"
       }
     ]
   })
 }
 
 resource "aws_s3_bucket_public_access_block" "lambda_zip_files" {
-  bucket = aws_s3_bucket.lambda_bucket.id
+  bucket                  = aws_s3_bucket.lambda_bucket.id
   block_public_acls       = true
   block_public_policy     = false
   ignore_public_acls      = true
