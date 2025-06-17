@@ -39,7 +39,7 @@ locals {
   lambda-files = [ # explicit list of files to archive
     "parts_finder.py",
     "sns_email_alerts.py",
-    "lkq.py",
+    "LKQ.py",
     "pick_a_part.py"
 
   ]
