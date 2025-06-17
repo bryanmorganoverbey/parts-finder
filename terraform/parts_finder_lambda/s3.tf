@@ -37,9 +37,11 @@ resource "aws_s3_bucket_public_access_block" "lambda_zip_files" {
 }
 locals {
   lambda-files = [ # explicit list of files to archive
-    "lambda_function.py",
+    "parts_finder.py",
     "sns_email_alerts.py",
-    "LKQ.py"
+    "lkq.py",
+    "pick_a_part.py"
+
   ]
 }
 
